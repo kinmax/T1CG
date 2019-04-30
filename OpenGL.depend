@@ -137,3 +137,28 @@
 
 1298986600 c:\users\16104046\desktop\t1cg\gl\freeglut_ext.h
 
+1556634178 source:c:\users\16104052\documents\t1cg\programabasicoopengl.cpp
+	<iostream>
+	<cmath>
+	<ctime>
+	<fstream>
+	<windows.h>
+	<glut.h>
+	<sys/time.h>
+	<GLUT/glut.h>
+	<glut.h>
+
+1556634096 c:\users\16104052\documents\t1cg\gl\glut.h
+	"freeglut.h"
+
+1556634096 c:\users\16104052\documents\t1cg\gl\freeglut.h
+	"freeglut_std.h"
+	"freeglut_ext.h"
+
+1556634096 c:\users\16104052\documents\t1cg\gl\freeglut_std.h
+	<windows.h>
+	<GL/gl.h>
+	<GL/glu.h>
+
+1556634096 c:\users\16104052\documents\t1cg\gl\freeglut_ext.h
+

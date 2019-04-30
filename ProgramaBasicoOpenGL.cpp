@@ -51,6 +51,7 @@ typedef struct{
     int height,width;
     int form[20][20];
     int visible;
+    float radius;
     float move;
 }Object;
 
@@ -127,9 +128,9 @@ void reshape( int w, int h )
 void DesenhaTriangulo()
 {
     glBegin(GL_TRIANGLES);
-	    glVertex2f(0,0);
-        glVertex2f(0.5,1);
-        glVertex2f(1,0);
+	    glVertex2f(10,10);
+        glVertex2f(20,10);
+        glVertex2f(15,20);
 	glEnd();
 }
 
@@ -203,7 +204,7 @@ void display( void )
 	glColor3f(1,0,0);
 
 	glPushMatrix();
-        glTranslatef(500, 500, 0);
+        glTranslatef(100, 100, 0);
         MakeImage(enemy1);
     glPopMatrix();
 
@@ -214,7 +215,8 @@ void display( void )
         glTranslatef(0,mov,0);
         glTranslatef(-0.5,-0.5,0);
         //glRotated(-ang,0,0,1);
-        DesenhaTriangulo();
+        //DesenhaTriangulo();
+        MakeImage(enemy1);
 	}
     glPopMatrix();
 
@@ -257,20 +259,20 @@ void keyboard ( unsigned char key, int x, int y )
 			exit ( 0 );   // a tecla ESC for pressionada
 			break;
         case 'a':
-            ang+=10;
+            ang+=5;
             break;
         case 'd':
-            ang-=10;
+            ang-=5;
             break;
         case 'w':
-            mov+=0.3;
-            posx+=0.3;
-            posy+=0.3;
+            mov+=5;
+            posx+=5;
+            posy+=5;
             break;
         case 's':
-            mov-=0.3;
-            posx-=0.3;
-            posy-=0.3;
+            mov-=5;
+            posx-=5;
+            posy-=5;
             break;
 		default:
 			break;
@@ -315,6 +317,7 @@ void LoadImages()
     inFile >> altura >> largura;
     enemy1.height= altura;
     enemy1.width= largura;
+    enemy1.radius = largura*2;
     cout<<altura<<endl;
     cout<<largura<<endl;
     for(int i = 0; i < altura; i++){ // I e a linha
@@ -331,7 +334,7 @@ void init(void)
 {
     //int r;
 	// Define a cor do fundo da tela (AZUL)
-    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     LoadImages();
     //r = LoadTXT (name.c_str());
 
