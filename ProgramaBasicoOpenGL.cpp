@@ -18,6 +18,7 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <string>
 using namespace std;
 
 #ifdef WIN32
@@ -37,25 +38,51 @@ static struct timeval last_idle_time;
 #include <glut.h>
 #endif
 
-ifstream inFile;
+ifstream arquivo;
 
 float ang = 0;
 float mov = 0;
 float posx = 0;
 float posy = 0;
 
+typedef struct Cor
+{
+    int r, g, b, id;
+} Cor;
+
+typedef struct Personagem
+{
+    float x;
+    float y;
+    int altura;
+    int largura;
+    int desenho[20][20];
+    int visivel;
+    Cor *cores;
+} Personagem;
+
+typedef struct Tiro
+{
+    float x;
+    float y;
+    int visivel;
+    Cor cor;
+} Tiro;
 
 
-typedef struct{
-    float x, y;
-    int height,width;
-    int form[20][20];
-    int visible;
-    float radius;
-    float move;
-}Object;
+Personagem inimigos[8];
+Personagem jogador;
 
-Object enemy1;
+Tiro tirosInimigos[8];
+Tiro tirosJogador[10];
+
+int contaTirosJogador = 0;
+int contaTirosInimigos = 0;
+
+float dtime;
+int ppt = 5; //pixels por teclada
+
+
 
 // **********************************************************************
 //  void animate ( unsigned char key, int x, int y )
@@ -77,6 +104,7 @@ void animate()
     gettimeofday(&time_now, NULL);
     dt = (float)(time_now.tv_sec  - last_idle_time.tv_sec) +
     1.0e-6*(time_now.tv_usec - last_idle_time.tv_usec);
+    dtime = dt;
 #endif
     AccumTime +=dt;
     if (AccumTime >=3) // imprime o FPS a cada 3 segundos
@@ -153,26 +181,20 @@ void DesenhaEixos()
     glEnd();
 }
 
-void MakeImage(Object o){
-    int altura = o.height;
-    int largura = o.width;
-    for(int i = 0; i < altura; i++){ // I e a linha
-        for(int j = 0; j < largura; j++){ // J e a coluna
-            int color;
-            color = o.form[i][j];
-            if(color == 1)
-                glColor3f(0, 0, 0);
-            else if(color == 2)
-                glColor3f(255,0,0);
-            else if(color == 3)
-                glColor3f(0,255,0);
-            else if(color == 4)
-                glColor3f(255,255,255);
+void DesenhaPersonagem(Personagem p)
+{
+    for(int i = 0; i < p.altura; i++)
+    {
+        for(int j = 0; j < p.largura; j++)
+        {
+            int cor;
+            cor = p.desenho[i][j];
+            glColor3f(p.cores[cor-1].r, p.cores[cor-1].g, p.cores[cor-1].b);
 
-            int x = ((j+1 - largura/2) *7);
-            int y = ((altura - i-1) * 7);
+            int x = ((j+1 - p.largura/2) *5);
+            int y = ((p.altura - i-1) * 5);
 
-            glPointSize(7);
+            glPointSize(5);
             glBegin(GL_POINTS);
                 glVertex2f(x, y);
             glEnd();
@@ -205,7 +227,7 @@ void display( void )
 
 	glPushMatrix();
         glTranslatef(100, 100, 0);
-        MakeImage(enemy1);
+        DesenhaPersonagem(inimigos[0]);
     glPopMatrix();
 
 	glPushMatrix();
@@ -216,7 +238,7 @@ void display( void )
         glTranslatef(-0.5,-0.5,0);
         //glRotated(-ang,0,0,1);
         //DesenhaTriangulo();
-        MakeImage(enemy1);
+        DesenhaPersonagem(inimigos[0]);
 	}
     glPopMatrix();
 
@@ -302,32 +324,86 @@ void arrow_keys ( int a_keys, int x, int y )
 	}
 }
 
-void LoadImages()
+void CarregaPersonagens()
 {
-    inFile.open("enemy02.txt");
-    if(!inFile){
-        cout << "Não consegui abrir o arquivo do inimigo 01" << endl;
-        exit(1);
-    }else{
-        cout << "Arquivo do inimigo 01 aberto" << endl;
-    }
-    int altura;
-    int largura;
-    int form[20][20];
-    inFile >> altura >> largura;
-    enemy1.height= altura;
-    enemy1.width= largura;
-    enemy1.radius = largura*2;
-    cout<<altura<<endl;
-    cout<<largura<<endl;
-    for(int i = 0; i < altura; i++){ // I e a linha
-        for(int j = 0; j < largura; j++){ // J e a coluna
-            inFile >> enemy1.form[i][j];
+    const char* files[] = {"jogador.txt", "inimigo1.txt", "inimigo2.txt", "inimigo3.txt", "inimigo4.txt"};
+    Personagem pers;
+    int i, j, aux;
+    string lixo;
+    for(i = 0; i < 5; i++)
+    {
+        arquivo.open(files[i]);
+        if(!arquivo)
+        {
+            cout << "Erro ao abrir arquivo " << files[i] << endl;
+            exit(1);
+        }else
+        {
+            cout << "Arquivo " << files[i] << " aberto com sucesso" << endl;
+        }
+
+        getline(arquivo, lixo);
+        cout << lixo << endl;
+        int nCores;
+        Cor *cores;
+        arquivo >> nCores;
+        cout << nCores << endl;
+        cores = new Cor[nCores];
+        for(j = 0; j < nCores; j++)
+        {
+            arquivo >> cores[j].id;
+            cout << cores[j].id << endl;
+            arquivo >> cores[j].r;
+            cout << cores[j].r << endl;
+            arquivo >> cores[j].g;
+            cout << cores[j].g << endl;
+            arquivo >> cores[j].b;
+            cout << cores[j].b << endl;
+        }
+        pers.cores = cores;
+        getline(arquivo, lixo);
+        getline(arquivo, lixo);
+        cout << lixo << endl;
+        int altura;
+        int largura;
+        int desenho[20][20];
+        arquivo >> altura;
+        cout << altura << endl;
+        arquivo >> largura;
+        cout << largura << endl;
+        pers.altura = altura;
+        pers.largura = largura;
+        for(int i = 0; i < altura; i++)
+        {
+            for(int j = 0; j < largura; j++)
+            {
+                arquivo >> pers.desenho[i][j];
+            }
+        }
+
+        arquivo.close();
+
+        if(i == 0)
+        {
+            jogador = pers;
+        }
+        else if(i == 1)
+        {
+            inimigos[0] = inimigos[1] = pers;
+        }
+        else if(i == 2)
+        {
+            inimigos[2] = inimigos[3] = pers;
+        }
+        else if(i == 3)
+        {
+            inimigos[4] = inimigos[5] = pers;
+        }
+        else
+        {
+            inimigos[6] = inimigos[7] = pers;
         }
     }
-    //objects[ENEMY01] = enemy01;
-    //MakeImage(enemy1);
-    inFile.close();
 }
 
 void init(void)
@@ -335,7 +411,7 @@ void init(void)
     //int r;
 	// Define a cor do fundo da tela (AZUL)
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    LoadImages();
+    CarregaPersonagens();
     //r = LoadTXT (name.c_str());
 
     //if (!r) exit(1); // Erro na carga da imagem
