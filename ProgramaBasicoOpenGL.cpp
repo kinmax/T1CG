@@ -99,20 +99,21 @@ int pps = 5; //pixels por segundo
 // **********************************************************************
 void animate()
 {
-    static float dt;
+    float dt;
     static float AccumTime=0;
 
 #ifdef _WIN32
     DWORD time_now;
     time_now = GetTickCount();
     dt = (float) (time_now - last_idle_time) / 1000.0;
+    dtime = dt;
 #else
     // Figure out time elapsed since last call to idle function
     struct timeval time_now;
     gettimeofday(&time_now, NULL);
     dt = (float)(time_now.tv_sec  - last_idle_time.tv_sec) +
     1.0e-6*(time_now.tv_usec - last_idle_time.tv_usec);
-    dtime = dt;
+    dtime = dt
 #endif
     AccumTime +=dt;
     if (AccumTime >=3) // imprime o FPS a cada 3 segundos
@@ -226,7 +227,7 @@ void DesenhaInimigo(int in)
         inimigos[in].x = (pow((1-t), 2) * p0.x) + (2 * (1-t)*t*p1.x) + (pow(t,2)*p2.x);
         inimigos[in].y = (pow((1-t), 2) * p0.y) + (2 * (1-t)*t*p1.y) + (pow(t,2)*p2.y);
 
-        inimigos[in].t += 0.00015;
+        inimigos[in].t += 0.3 * dtime;
         glPushMatrix();
         {
             glTranslatef(inimigos[in].x,inimigos[in].y,0);
