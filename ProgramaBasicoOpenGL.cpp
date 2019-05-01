@@ -40,8 +40,7 @@ static struct timeval last_idle_time;
 
 ifstream arquivo;
 
-float ang = 0;
-float mov = 0;
+float mov = 5;
 float posx = 0;
 float posy = 0;
 
@@ -54,6 +53,7 @@ typedef struct Personagem
 {
     float x;
     float y;
+    float ang;
     int altura;
     int largura;
     int desenho[20][20];
@@ -80,7 +80,7 @@ int contaTirosJogador = 0;
 int contaTirosInimigos = 0;
 
 float dtime;
-int ppt = 5; //pixels por teclada
+int pps = 5; //pixels por segundo
 
 
 
@@ -202,6 +202,27 @@ void DesenhaPersonagem(Personagem p)
     }
 }
 
+void DesenhaJogador()
+{
+    float xr, yr;
+    float rang;
+
+    float vel = pps * dtime;
+    float ytrans;
+    glPushMatrix();
+    {
+
+        glTranslatef(jogador.x,jogador.y,0);
+        glRotatef(jogador.ang,0,0,1);
+
+        //glRotated(-ang,0,0,1);
+        //DesenhaTriangulo();
+        DesenhaPersonagem(jogador);
+    }
+    glPopMatrix();
+
+}
+
 // **********************************************************************
 //  void display( void )
 //
@@ -230,16 +251,7 @@ void display( void )
         DesenhaPersonagem(inimigos[0]);
     glPopMatrix();
 
-	glPushMatrix();
-	{
-        //glTranslatef(-0.5,-0.5,0);
-        glRotatef(ang, 0,0,1);
-        glTranslatef(0,mov,0);
-        glTranslatef(-0.5,-0.5,0);
-        //glRotated(-ang,0,0,1);
-        //DesenhaTriangulo();
-        DesenhaPersonagem(inimigos[0]);
-	}
+	DesenhaJogador();
     glPopMatrix();
 
 
@@ -274,27 +286,25 @@ void display( void )
 
 void keyboard ( unsigned char key, int x, int y )
 {
-
+    float xr, yr, rang;
 	switch ( key )
 	{
 		case 27:        // Termina o programa qdo
 			exit ( 0 );   // a tecla ESC for pressionada
 			break;
         case 'a':
-            ang+=5;
+            jogador.ang+=5;
             break;
         case 'd':
-            ang-=5;
+            jogador.ang-=5;
             break;
         case 'w':
-            mov+=5;
-            posx+=5;
-            posy+=5;
-            break;
-        case 's':
-            mov-=5;
-            posx-=5;
-            posy-=5;
+            rang = -((float)jogador.ang*M_PI)/180;
+            cout << jogador.ang << endl;
+            xr = (mov * sin(rang));
+            yr = (mov * cos(rang));
+            jogador.x += xr;
+            jogador.y += yr;
             break;
 		default:
 			break;
@@ -380,6 +390,10 @@ void CarregaPersonagens()
                 arquivo >> pers.desenho[i][j];
             }
         }
+        pers.x = 0;
+        pers.y = 0;
+        pers.visivel = 1;
+        pers.ang = 0;
 
         arquivo.close();
 
@@ -412,6 +426,8 @@ void init(void)
 	// Define a cor do fundo da tela (AZUL)
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     CarregaPersonagens();
+    jogador.x = 600;
+    jogador.y = 400;
     //r = LoadTXT (name.c_str());
 
     //if (!r) exit(1); // Erro na carga da imagem
