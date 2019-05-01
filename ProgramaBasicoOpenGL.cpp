@@ -19,6 +19,7 @@
 #include <ctime>
 #include <fstream>
 #include <string>
+#include <cstdlib>
 using namespace std;
 
 #ifdef WIN32
@@ -44,6 +45,11 @@ float mov = 5;
 float posx = 0;
 float posy = 0;
 
+typedef struct Ponto
+{
+    float x, y;
+} Ponto;
+
 typedef struct Cor
 {
     int r, g, b, id;
@@ -56,9 +62,11 @@ typedef struct Personagem
     float ang;
     int altura;
     int largura;
-    int desenho[20][20];
+    int desenho[8][12];
     int visivel;
     Cor *cores;
+    float t;
+    Ponto p0, p1, p2;
 } Personagem;
 
 typedef struct Tiro
@@ -69,9 +77,9 @@ typedef struct Tiro
     Cor cor;
 } Tiro;
 
-
 Personagem inimigos[8];
 Personagem jogador;
+
 
 Tiro tirosInimigos[8];
 Tiro tirosJogador[10];
@@ -152,35 +160,6 @@ void reshape( int w, int h )
 
 }
 
-
-void DesenhaTriangulo()
-{
-    glBegin(GL_TRIANGLES);
-	    glVertex2f(10,10);
-        glVertex2f(20,10);
-        glVertex2f(15,20);
-	glEnd();
-}
-
-void DesenhaInimigo()
-{
-    glBegin(GL_TRIANGLES);
-        glVertex2f(0,2);
-        glVertex2f(2,2);
-        glVertex2f(0,4);
-    glEnd();
-}
-
-void DesenhaEixos()
-{
-    glBegin(GL_LINES);
-        glVertex2f(0,5);
-        glVertex2f(10,5);
-        glVertex2f(5,0);
-        glVertex2f(5,10);
-    glEnd();
-}
-
 void DesenhaPersonagem(Personagem p)
 {
     for(int i = 0; i < p.altura; i++)
@@ -204,24 +183,59 @@ void DesenhaPersonagem(Personagem p)
 
 void DesenhaJogador()
 {
-    float xr, yr;
-    float rang;
-
-    float vel = pps * dtime;
-    float ytrans;
-    glPushMatrix();
+    if(jogador.visivel)
     {
-
-        glTranslatef(jogador.x,jogador.y,0);
-        glRotatef(jogador.ang,0,0,1);
-
-        //glRotated(-ang,0,0,1);
-        //DesenhaTriangulo();
-        DesenhaPersonagem(jogador);
+        glPushMatrix();
+        {
+            glTranslatef(jogador.x,jogador.y,0);
+            glRotatef(jogador.ang,0,0,1);
+            DesenhaPersonagem(jogador);
+        }
+        glPopMatrix();
     }
-    glPopMatrix();
-
 }
+
+void DesenhaInimigo(int in)
+{
+    srand(time(NULL));
+    float t;
+    Ponto p0, p1, p2;
+    if(inimigos[in].visivel)
+    {
+        t = inimigos[in].t;
+        if(t <= 1.0f)
+        {
+            p0 = inimigos[in].p0;
+            p1 = inimigos[in].p1;
+            p2 = inimigos[in].p2;
+        }
+        else
+        {
+            inimigos[in].t = 0.0f;
+            p0.x = inimigos[in].x;
+            p0.y = inimigos[in].y;
+            p1.x = rand() % 1200;;
+            p1.y = rand() % 800;
+            p2.x = rand() % 1200;
+            p2.y = rand() % 800;
+            inimigos[in].p0 = p0;
+            inimigos[in].p1 = p1;
+            inimigos[in].p2 = p2;
+        }
+
+        inimigos[in].x = (pow((1-t), 2) * p0.x) + (2 * (1-t)*t*p1.x) + (pow(t,2)*p2.x);
+        inimigos[in].y = (pow((1-t), 2) * p0.y) + (2 * (1-t)*t*p1.y) + (pow(t,2)*p2.y);
+
+        inimigos[in].t += 0.00015;
+        glPushMatrix();
+        {
+            glTranslatef(inimigos[in].x,inimigos[in].y,0);
+            DesenhaPersonagem(inimigos[0]);
+        }
+        glPopMatrix();
+    }
+}
+
 
 // **********************************************************************
 //  void display( void )
@@ -252,7 +266,7 @@ void display( void )
     glPopMatrix();
 
 	DesenhaJogador();
-    glPopMatrix();
+	DesenhaInimigo(0);
 
 
     glLoadIdentity();
@@ -303,16 +317,46 @@ void keyboard ( unsigned char key, int x, int y )
             cout << jogador.ang << endl;
             xr = (mov * sin(rang));
             yr = (mov * cos(rang));
-            jogador.x += xr;
-            jogador.y += yr;
+            if((jogador.x + xr > 1150) || (jogador.x + xr < 35))
+            {
+                cout << "POS AGR SIM " << jogador.x << endl;
+            }
+            else{
+                cout << "POS AGR " << jogador.x << endl;
+                jogador.x += xr;
+            }
+
+            if((jogador.y + yr > 750) || (jogador.y + yr < 35))
+            {
+                cout << "POS AGR SIM " << jogador.y << endl;
+            }
+            else{
+                cout << "POS AGR " << jogador.y << endl;
+                jogador.y += yr;
+            }
             break;
         case 's':
             rang = -((float)jogador.ang*M_PI)/180;
             cout << jogador.ang << endl;
             xr = (mov * sin(rang));
             yr = (mov * cos(rang));
-            jogador.x -= xr;
-            jogador.y -= yr;
+            if((jogador.x - xr > 1200) || (jogador.x - xr < 0))
+            {
+                cout << "POS AGR SIM " << jogador.x << endl;
+            }
+            else{
+                cout << "POS AGR " << jogador.x << endl;
+                jogador.x -= xr;
+            }
+
+            if((jogador.y - yr > 800) || (jogador.y - yr < 0))
+            {
+                cout << "POS AGR SIM " << jogador.y << endl;
+            }
+            else{
+                cout << "POS AGR " << jogador.y << endl;
+                jogador.y -= yr;
+            }
             break;
 		default:
 			break;
@@ -384,7 +428,7 @@ void CarregaPersonagens()
         cout << lixo << endl;
         int altura;
         int largura;
-        int desenho[20][20];
+        int desenho[8][12];
         arquivo >> altura;
         cout << altura << endl;
         arquivo >> largura;
@@ -402,7 +446,10 @@ void CarregaPersonagens()
         pers.y = 0;
         pers.visivel = 1;
         pers.ang = 0;
-
+        pers.t = 2.0f;
+        Ponto p0, p1, p2;
+        p0.x = p1.x = p2.x = 0.0f;
+        p0.x = p1.x = p2.x = 0.0f;
         arquivo.close();
 
         if(i == 0)
@@ -436,6 +483,8 @@ void init(void)
     CarregaPersonagens();
     jogador.x = 600;
     jogador.y = 400;
+    inimigos[0].x = 200;
+    inimigos[0].y = 300;
     //r = LoadTXT (name.c_str());
 
     //if (!r) exit(1); // Erro na carga da imagem
