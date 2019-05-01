@@ -57,6 +57,7 @@ typedef struct Cor
 
 typedef struct Personagem
 {
+    float x_max, y_max, x_min, y_min;
     float x;
     float y;
     float ang;
@@ -215,7 +216,7 @@ void DesenhaInimigo(int in)
             inimigos[in].t = 0.0f;
             p0.x = inimigos[in].x;
             p0.y = inimigos[in].y;
-            p1.x = rand() % 1200;;
+            p1.x = rand() % 1200;
             p1.y = rand() % 800;
             p2.x = rand() % 1200;
             p2.y = rand() % 800;
@@ -451,6 +452,13 @@ void CarregaPersonagens()
         Ponto p0, p1, p2;
         p0.x = p1.x = p2.x = 0.0f;
         p0.x = p1.x = p2.x = 0.0f;
+        pers.p0 = p0;
+        pers.p1 = p1;
+        pers.p2 = p2;
+        pers.x_min = pers.x - 25.0f;
+        pers.x_max = pers.x + 34.0f;
+        pers.y_min = pers.y;
+        pers.y_max = pers.y + 39.0f;
         arquivo.close();
 
         if(i == 0)
