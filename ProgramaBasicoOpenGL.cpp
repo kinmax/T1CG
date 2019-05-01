@@ -306,6 +306,14 @@ void keyboard ( unsigned char key, int x, int y )
             jogador.x += xr;
             jogador.y += yr;
             break;
+        case 's':
+            rang = -((float)jogador.ang*M_PI)/180;
+            cout << jogador.ang << endl;
+            xr = (mov * sin(rang));
+            yr = (mov * cos(rang));
+            jogador.x -= xr;
+            jogador.y -= yr;
+            break;
 		default:
 			break;
 	}
@@ -424,7 +432,7 @@ void init(void)
 {
     //int r;
 	// Define a cor do fundo da tela (AZUL)
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     CarregaPersonagens();
     jogador.x = 600;
     jogador.y = 400;
