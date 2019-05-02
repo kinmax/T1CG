@@ -98,6 +98,68 @@ float dtime;
 int pps = 5; //pixels por segundo
 
 int vidas = 3;
+float veltiro;
+
+bool colisao(Personagem p, Tiro t)
+{
+    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
+    x1_min = p.x_min;
+    x1_max = p.x_max;
+    y1_min = p.y_min;
+    y1_max = p.y_max;
+
+    x2_min = t.x - 3.5f;
+    x2_max = t.x + 3.5f;
+    y2_min = t.y - 3.5f;
+    y2_max = t.y + 3.5f;
+
+
+    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool colisao(Personagem p1, Personagem p2)
+{
+    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
+    x1_min = p1.x_min;
+    x1_max = p1.x_max;
+    y1_min = p1.y_min;
+    y1_max = p1.y_max;
+
+    x2_min = p2.x_min;
+    x2_max = p2.x_max;
+    y2_min = p2.y_min;
+    y2_max = p2.y_max;
+
+    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool colisao(float x1, float y1, float x2, float y2)
+{
+    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
+    x1_min = x1-25.0f;
+    x1_max = x1+34.0f;
+    y1_min = y1;
+    y1_max = y1+39.0f;
+
+    x2_min = x2-25.0f;
+    x2_max = x2+34.0f;
+    y2_min = y2;
+    y2_max = y2+39.0f;
+
+    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
+    {
+        return true;
+    }
+    return false;
+}
 
 
 
@@ -125,8 +187,10 @@ void animate()
     dtime = dt
 #endif
     AccumTime +=dt;
+    veltiro = dt * 20.0f;
     if (AccumTime >=3) // imprime o FPS a cada 3 segundos
     {
+        veltiro = dt * 5.0f;
         cout << 1.0/dt << " FPS"<< endl;
         AccumTime = 0;
     }
@@ -139,71 +203,38 @@ void animate()
     //if  (GetAsyncKeyState(32) & 0x8000) != 0)
     //  cout << "Espaco Pressionado" << endl;
 
+    int i,j;
+    for(i = 0; i < 10; i++)
+    {
+        for(j = 0; j < 8; j++)
+        {
+            if(inimigos[j].visivel == 1)
+            {
+                if(colisao(inimigos[j], tirosJogador[i]) && tirosJogador[i].visivel)
+                {
+                    cout << "aqui" << endl;
+                    inimigos[j].visivel = 0;
+                    tirosJogador[i].visivel = false;
+                    contaTirosJogador--;
+                }
+            }
+        }
+    }
+
+    for(i = 0; i < 8; i++)
+    {
+        if(colisao(inimigos[i], jogador) && inimigos[i].visivel)
+        {
+            exit(0);
+        }
+    }
+
+
     // Redesenha
     glutPostRedisplay();
 }
 
-bool colisao(Personagem p, Tiro t)
-{
-    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
-    x1_min = p.x_min;
-    x1_max = p.x_max;
-    y1_min = p.y_min;
-    y1_min = p.y_max;
 
-    x2_min = t.x - 3.5f;
-    x2_max = t.x + 3.5f;
-    y2_min = t.y - 3.5f;
-    y2_min = t.y + 3.5f;
-
-
-    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
-    {
-        return true;
-        cout << "true" << endl;
-    }
-    return false;
-}
-
-bool colisao(Personagem p1, Personagem p2)
-{
-    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
-    x1_min = p1.x_min;
-    x1_max = p1.x_max;
-    y1_min = p1.y_min;
-    y1_min = p1.y_max;
-
-    x2_min = p2.x_min;
-    x2_max = p2.x_max;
-    y2_min = p2.y_min;
-    y2_min = p2.y_max;
-
-    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
-    {
-        return true;
-    }
-    return false;
-}
-
-bool colisao(float x1, float y1, float x2, float y2)
-{
-    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
-    x1_min = x1-25.0f;
-    x1_max = x1+34.0f;
-    y1_min = y1;
-    y1_min = y1+39.0f;
-
-    x2_min = x2-25.0f;
-    x2_max = x2+34.0f;
-    y2_min = y2;
-    y2_min = y2+39.0f;
-
-    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
-    {
-        return true;
-    }
-    return false;
-}
 // **********************************************************************
 //  void init(void)
 //  Inicializa os parâmetros globais de OpenGL
@@ -247,7 +278,6 @@ void DesenhaTiroJogador(int i)
             glTranslated(0,tirosJogador[i].movim,0);
             xr = (tirosJogador[i].movim * sin(rang));
             yr = (tirosJogador[i].movim * cos(rang));
-            cout << contaTirosJogador << endl;
             tirosJogador[i].x += xr;
             tirosJogador[i].y += yr;
             glPointSize(7);
@@ -258,27 +288,77 @@ void DesenhaTiroJogador(int i)
         glPopMatrix();
         if(tirosJogador[i].x >= 1200.0f || tirosJogador[i].x <= 0.0f || tirosJogador[i].y >= 800.0f || tirosJogador[i].y <= 0.0f)
         {
-            cout << "oi" << endl;
             tirosJogador[i].visivel = false;
             contaTirosJogador--;
         }
         int j;
-        for(j = 0; j < 8; j++)
-        {
-            if(inimigos[j].visivel == 1)
-            {
-                if(colisao(inimigos[j], tirosJogador[i]))
-                {
-                    inimigos[j].visivel = 0;
-                    tirosJogador[i].visivel = false;
-                }
-            }
-
-        }
-
 
     }
 
+}
+
+void DesenhaTiroInimigo(int i)
+{
+    float t = 0.0f;
+    Ponto p0, p1;
+
+    float nx, ny;
+
+    if(tirosInimigos[i].visivel == false)
+    {
+
+        tirosInimigos[i].inimigo = false;
+        tirosInimigos[i].visivel = true;
+        tirosInimigos[i].x = inimigos[i].x;
+        tirosInimigos[i].y = inimigos[i].y;
+        tirosInimigos[i].ang = inimigos[i].ang;
+        tirosInimigos[i].cor.id = 2;
+        tirosInimigos[i].cor.r = 255;
+        tirosInimigos[i].cor.g = 0;
+        tirosInimigos[i].cor.b = 0;
+        tirosInimigos[i].movim = veltiro;
+
+        p0.x = tirosInimigos[i].x;
+        p0.y = tirosInimigos[i].y;
+        p1.x = jogador.x;
+        p1.y = jogador.y;
+
+        nx = (1-t)*p0.x + t*p1.x;
+        ny = (1-t)*p0.y + t*p1.y;
+
+        glPushMatrix();
+        {
+            glColor3f(tirosInimigos[i].cor.r, tirosInimigos[i].cor.g, tirosInimigos[i].cor.b);
+            glPointSize(7);
+            glBegin(GL_POINTS);
+                glVertex2f(inimigos[i].x,inimigos[i].y);
+            glEnd();
+        }
+        glPopMatrix();
+
+        tirosInimigos[i].x = nx;
+        tirosInimigos[i].y = ny;
+    }
+    else
+    {
+        glPushMatrix();
+        {
+            glColor3f(tirosInimigos[i].cor.r, tirosInimigos[i].cor.g, tirosInimigos[i].cor.b);
+            glPointSize(7);
+            glBegin(GL_POINTS);
+                glVertex2f(tirosInimigos[i].x,tirosInimigos[i].y);
+            glEnd();
+        }
+        glPopMatrix();
+
+        t += 0.005;
+        nx = (1-t)*p0.x + t*p1.x;
+        ny = (1-t)*p0.y + t*p1.y;
+
+        tirosInimigos[i].x = nx;
+        tirosInimigos[i].y = ny;
+
+    }
 }
 
 void DesenhaPersonagem(Personagem p)
@@ -320,7 +400,7 @@ void DesenhaInimigo(int in)
 {
     float t;
     Ponto p0, p1, p2;
-    if(inimigos[in].visivel)
+    if(inimigos[in].visivel == 1)
     {
         t = inimigos[in].t;
         if(t <= 1.0f)
@@ -350,7 +430,7 @@ void DesenhaInimigo(int in)
         inimigos[in].y_max = inimigos[in].y + 39.0f;
         inimigos[in].y_min = inimigos[in].y;
 
-        inimigos[in].t += 0.2 * dtime;
+        inimigos[in].t += 0.1 * dtime;
         glPushMatrix();
         {
             glTranslatef(inimigos[in].x,inimigos[in].y,0);
@@ -405,6 +485,12 @@ void display( void )
         }
     }
 
+    for(i = 0; i < 8; i++)
+    {
+        DesenhaTiroInimigo(i);
+    }
+
+
 
     //glLoadIdentity();
 
@@ -455,7 +541,7 @@ void keyboard ( unsigned char key, int x, int y )
                 tirosJogador[contaTirosJogador].cor.r = 0;
                 tirosJogador[contaTirosJogador].cor.g = 255;
                 tirosJogador[contaTirosJogador].cor.b = 0;
-                tirosJogador[contaTirosJogador].movim = 1;
+                tirosJogador[contaTirosJogador].movim = 0.3;
                 DesenhaTiroJogador(contaTirosJogador);
                 contaTirosJogador++;
 
@@ -734,6 +820,11 @@ void init(void)
     inimigos[7].x_min = numeros_x[8]-25.0f;
     inimigos[7].y_max = numeros_y[8]+39.0f;
     inimigos[7].y_min = numeros_y[8];
+
+    for(i = 0; i < 8; i++)
+    {
+        tirosInimigos[i].visivel = false;
+    }
     //r = LoadTXT (name.c_str());
 
     //if (!r) exit(1); // Erro na carga da imagem
