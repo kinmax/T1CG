@@ -91,6 +91,8 @@ int contaTirosInimigos = 0;
 float dtime;
 int pps = 5; //pixels por segundo
 
+int vidas = 3;
+
 
 
 // **********************************************************************
@@ -232,7 +234,7 @@ void DesenhaInimigo(int in)
         glPushMatrix();
         {
             glTranslatef(inimigos[in].x,inimigos[in].y,0);
-            DesenhaPersonagem(inimigos[0]);
+            DesenhaPersonagem(inimigos[in]);
         }
         glPopMatrix();
     }
@@ -245,6 +247,7 @@ void DesenhaInimigo(int in)
 // **********************************************************************
 void display( void )
 {
+    int i;
 
 	// Limpa a tela coma cor de fundo
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -262,13 +265,16 @@ void display( void )
 	glLineWidth(3);
 	glColor3f(1,0,0);
 
-	glPushMatrix();
-        glTranslatef(100, 100, 0);
-        DesenhaPersonagem(inimigos[0]);
-    glPopMatrix();
 
 	DesenhaJogador();
 	DesenhaInimigo(0);
+	DesenhaInimigo(1);
+	DesenhaInimigo(2);
+	DesenhaInimigo(3);
+	DesenhaInimigo(4);
+	DesenhaInimigo(5);
+	DesenhaInimigo(6);
+	DesenhaInimigo(7);
 
 
     glLoadIdentity();
@@ -316,47 +322,37 @@ void keyboard ( unsigned char key, int x, int y )
             break;
         case 'w':
             rang = -((float)jogador.ang*M_PI)/180;
-            cout << jogador.ang << endl;
             xr = (mov * sin(rang));
             yr = (mov * cos(rang));
-            if((jogador.x + xr > 1150) || (jogador.x + xr < 35))
+            if(jogador.x + xr > (1200 - jogador.x_max) || (jogador.x + xr < jogador.x_max))
             {
-                cout << "POS AGR SIM " << jogador.x << endl;
             }
             else{
-                cout << "POS AGR " << jogador.x << endl;
                 jogador.x += xr;
             }
 
-            if((jogador.y + yr > 750) || (jogador.y + yr < 35))
+            if((jogador.y + yr > (800 - jogador.y_max)) || (jogador.y + yr < jogador.y_max))
             {
-                cout << "POS AGR SIM " << jogador.y << endl;
             }
             else{
-                cout << "POS AGR " << jogador.y << endl;
                 jogador.y += yr;
             }
             break;
         case 's':
             rang = -((float)jogador.ang*M_PI)/180;
-            cout << jogador.ang << endl;
             xr = (mov * sin(rang));
             yr = (mov * cos(rang));
-            if((jogador.x - xr > 1200) || (jogador.x - xr < 0))
+            if((jogador.x - xr > (1200 - jogador.x_max)) || (jogador.x - xr < jogador.x_max))
             {
-                cout << "POS AGR SIM " << jogador.x << endl;
             }
             else{
-                cout << "POS AGR " << jogador.x << endl;
                 jogador.x -= xr;
             }
 
-            if((jogador.y - yr > 800) || (jogador.y - yr < 0))
+            if((jogador.y - yr > (800-jogador.y_max)) || (jogador.y - yr < jogador.y_max))
             {
-                cout << "POS AGR SIM " << jogador.y << endl;
             }
             else{
-                cout << "POS AGR " << jogador.y << endl;
                 jogador.y -= yr;
             }
             break;
@@ -407,34 +403,25 @@ void CarregaPersonagens()
         }
 
         getline(arquivo, lixo);
-        cout << lixo << endl;
         int nCores;
         Cor *cores;
         arquivo >> nCores;
-        cout << nCores << endl;
         cores = new Cor[nCores];
         for(j = 0; j < nCores; j++)
         {
             arquivo >> cores[j].id;
-            cout << cores[j].id << endl;
             arquivo >> cores[j].r;
-            cout << cores[j].r << endl;
             arquivo >> cores[j].g;
-            cout << cores[j].g << endl;
             arquivo >> cores[j].b;
-            cout << cores[j].b << endl;
         }
         pers.cores = cores;
         getline(arquivo, lixo);
         getline(arquivo, lixo);
-        cout << lixo << endl;
         int altura;
         int largura;
         int desenho[8][12];
         arquivo >> altura;
-        cout << altura << endl;
         arquivo >> largura;
-        cout << largura << endl;
         pers.altura = altura;
         pers.largura = largura;
         for(int i = 0; i < altura; i++)
@@ -484,16 +471,86 @@ void CarregaPersonagens()
     }
 }
 
+bool colisao(float x1, float y1, float x2, float y2)
+{
+    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
+    x1_min = x1-25.0f;
+    x1_max = x1+34.0f;
+    y1_min = y1;
+    y1_min = y1+39.0f;
+
+    x2_min = x2-25.0f;
+    x2_max = x2+34.0f;
+    y2_min = y2;
+    y2_min = y2+39.0f;
+
+    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
+    {
+        return true;
+    }
+    return false;
+}
+
 void init(void)
 {
+    srand(time(NULL));
     //int r;
 	// Define a cor do fundo da tela (AZUL)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     CarregaPersonagens();
-    jogador.x = 600;
-    jogador.y = 400;
-    inimigos[0].x = 200;
-    inimigos[0].y = 300;
+    float numeros_x[9];
+    float numeros_y[9];
+    int i;
+    for(i = 0; i < 9; i++)
+    {
+        numeros_x[i] = -1.0f;
+        numeros_y[i] = -1.0f;
+    }
+    bool deu = false;
+    int x, y;
+    int cont = 0;
+    int cont2 = 0;
+    while(deu == false && cont < 9)
+    {
+        x = float(rand() % 1150);
+        y = float(rand() % 750);
+        cont2 = 0;
+        for(i = 0; i < 9; i++)
+        {
+            if(colisao(x,y,numeros_x[i],numeros_y[i]) == false)
+            {
+                cont2++;
+            }
+        }
+        if(cont2 == 9)
+        {
+            numeros_x[cont] = x;
+            numeros_y[cont] = y;
+            cont++;
+        }
+        if(cont == 9)
+        {
+            deu = true;
+        }
+    }
+    jogador.x = numeros_x[0];
+    jogador.y = numeros_y[0];
+    inimigos[0].x = numeros_x[1];
+    inimigos[0].y = numeros_y[1];
+    inimigos[1].x = numeros_x[2];
+    inimigos[1].y = numeros_y[2];
+    inimigos[2].x = numeros_x[3];
+    inimigos[2].y = numeros_y[3];
+    inimigos[3].x = numeros_x[4];
+    inimigos[3].y = numeros_y[4];
+    inimigos[4].x = numeros_x[5];
+    inimigos[4].y = numeros_y[5];
+    inimigos[5].x = numeros_x[6];
+    inimigos[5].y = numeros_y[6];
+    inimigos[6].x = numeros_x[7];
+    inimigos[6].y = numeros_y[7];
+    inimigos[7].x = numeros_x[8];
+    inimigos[7].y = numeros_y[8];
     //r = LoadTXT (name.c_str());
 
     //if (!r) exit(1); // Erro na carga da imagem
