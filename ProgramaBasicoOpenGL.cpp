@@ -100,6 +100,10 @@ int pps = 5; //pixels por segundo
 int vidas = 3;
 float veltiro;
 
+bool ganhou = false;
+bool morreu = false;
+int inimigosMortos = 0;
+
 bool colisao(Personagem p, Tiro t)
 {
     float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
@@ -212,7 +216,6 @@ void animate()
             {
                 if(colisao(inimigos[j], tirosJogador[i]) && tirosJogador[i].visivel)
                 {
-                    cout << "aqui" << endl;
                     inimigos[j].visivel = 0;
                     tirosJogador[i].visivel = false;
                     contaTirosJogador--;
@@ -223,9 +226,36 @@ void animate()
 
     for(i = 0; i < 8; i++)
     {
-        if(colisao(inimigos[i], jogador) && inimigos[i].visivel)
+        if(inimigos[i].visivel == 0)
         {
-            exit(0);
+            inimigosMortos++;
+        }
+    }
+    if(inimigosMortos == 8)
+    {
+        ganhou = true;
+    }
+    inimigosMortos = 0;
+
+
+    for(i = 0; i < 8; i++)
+    {
+        if(colisao(jogador, tirosInimigos[i]) && tirosInimigos[i].visivel)
+        {
+            tirosInimigos[i].visivel = 0;
+            vidas--;
+        }
+        if(vidas == 0)
+        {
+            morreu = true;
+        }
+    }
+
+    for(i = 0; i < 8; i++)
+    {
+        if(colisao(inimigos[i], jogador) && inimigos[i].visivel == 1)
+        {
+            morreu = true;
         }
     }
 
@@ -291,7 +321,6 @@ void DesenhaTiroJogador(int i)
             tirosJogador[i].visivel = false;
             contaTirosJogador--;
         }
-        int j;
 
     }
 
@@ -299,65 +328,63 @@ void DesenhaTiroJogador(int i)
 
 void DesenhaTiroInimigo(int i)
 {
-    float t = 0.0f;
-    Ponto p0, p1;
-
-    float nx, ny;
-
+    float modulo1, modulo2, cosa, dot, angle, rang, xr, yr;
     if(tirosInimigos[i].visivel == false)
     {
+        Ponto p1, p2;
+        p1.x = 0;
+        p1.y = 1;
+        p2.x = (jogador.x - inimigos[i].x);
+        p2.y = (jogador.y - inimigos[i].y);
 
-        tirosInimigos[i].inimigo = false;
-        tirosInimigos[i].visivel = true;
+        modulo1 = 1.0f;
+        modulo2 = sqrt(pow(p2.x, 2.0f) + pow(p2.y, 2.0f));
+        dot = (p1.x * p2.x) + (p1.y * p2.y);
+        cosa = dot/(modulo1 * modulo2);
+        rang = acos(cosa);
+        angle = rang*180/M_PI;
+        if(p2.x > 0)
+        {
+            angle = -angle;
+            rang = -rang;
+        }
+        tirosInimigos[i].ang = angle;
         tirosInimigos[i].x = inimigos[i].x;
         tirosInimigos[i].y = inimigos[i].y;
-        tirosInimigos[i].ang = inimigos[i].ang;
+        tirosInimigos[i].inimigo = true;
+        tirosInimigos[i].visivel = true;
         tirosInimigos[i].cor.id = 2;
         tirosInimigos[i].cor.r = 255;
         tirosInimigos[i].cor.g = 0;
         tirosInimigos[i].cor.b = 0;
-        tirosInimigos[i].movim = veltiro;
-
-        p0.x = tirosInimigos[i].x;
-        p0.y = tirosInimigos[i].y;
-        p1.x = jogador.x;
-        p1.y = jogador.y;
-
-        nx = (1-t)*p0.x + t*p1.x;
-        ny = (1-t)*p0.y + t*p1.y;
-
-        glPushMatrix();
-        {
-            glColor3f(tirosInimigos[i].cor.r, tirosInimigos[i].cor.g, tirosInimigos[i].cor.b);
-            glPointSize(7);
-            glBegin(GL_POINTS);
-                glVertex2f(inimigos[i].x,inimigos[i].y);
-            glEnd();
-        }
-        glPopMatrix();
-
-        tirosInimigos[i].x = nx;
-        tirosInimigos[i].y = ny;
+        tirosInimigos[i].movim = 0.03f;
     }
+
     else
     {
         glPushMatrix();
         {
             glColor3f(tirosInimigos[i].cor.r, tirosInimigos[i].cor.g, tirosInimigos[i].cor.b);
+            glTranslatef(tirosInimigos[i].x, tirosInimigos[i].y, 0);
+            glRotated(tirosInimigos[i].ang,0,0,1);
+            glTranslated(0,tirosInimigos[i].movim,0);
+            rang = -((float)tirosInimigos[i].ang*M_PI)/180;
+            //tirosInimigos[i].movim += 0.03f;
+            xr = (tirosInimigos[i].movim * sin(rang));
+            yr = (tirosInimigos[i].movim * cos(rang));
+            tirosInimigos[i].x += xr;
+            tirosInimigos[i].y += yr;
             glPointSize(7);
             glBegin(GL_POINTS);
-                glVertex2f(tirosInimigos[i].x,tirosInimigos[i].y);
+                glVertex2f(0,0);
             glEnd();
         }
         glPopMatrix();
 
-        t += 0.005;
-        nx = (1-t)*p0.x + t*p1.x;
-        ny = (1-t)*p0.y + t*p1.y;
-
-        tirosInimigos[i].x = nx;
-        tirosInimigos[i].y = ny;
-
+        if(tirosInimigos[i].x >= 1200.0f || tirosInimigos[i].x <= 0.0f || tirosInimigos[i].y >= 800.0f || tirosInimigos[i].y <= 0.0f)
+        {
+            tirosInimigos[i].visivel = false;
+        }
     }
 }
 
@@ -440,6 +467,21 @@ void DesenhaInimigo(int in)
     }
 }
 
+void tudoInvisivel()
+{
+    int i;
+    for(i = 0; i < 10; i++)
+    {
+        tirosJogador[i].visivel = false;
+    }
+    for(i = 0; i < 8; i++)
+    {
+        tirosInimigos[i].visivel = false;
+        inimigos[i].visivel = 0;
+    }
+    jogador.visivel = 0;
+}
+
 
 // **********************************************************************
 //  void display( void )
@@ -467,15 +509,14 @@ void display( void )
 
 	srand(time(NULL));
 
+
+
 	DesenhaJogador();
-	DesenhaInimigo(0);
-	DesenhaInimigo(1);
-	DesenhaInimigo(2);
-	DesenhaInimigo(3);
-	DesenhaInimigo(4);
-	DesenhaInimigo(5);
-	DesenhaInimigo(6);
-	DesenhaInimigo(7);
+
+	for(i = 0; i < 8; i++)
+    {
+       DesenhaInimigo(i);
+    }
 
 	for(i = 0; i < 10; i++)
     {
@@ -488,6 +529,51 @@ void display( void )
     for(i = 0; i < 8; i++)
     {
         DesenhaTiroInimigo(i);
+    }
+
+    char* vid;
+    if(vidas == 1)
+        vid = "1";
+    else if(vidas == 2)
+        vid = "2";
+    else if(vidas == 3)
+        vid = "3";
+    else if(vidas == 0)
+        vid = "0";
+
+    glColor3f( 255, 0, 0 );
+    glRasterPos2f(1180, 780);
+    int len;
+    len = (int)strlen(vid);
+    for (i = 0; i < len; i++) {
+        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, vid[i]);
+    }
+
+
+    if(morreu)
+    {
+        tudoInvisivel();
+        char* str = "SUA NAVE FOI DESTRUIDA EM COMBATE";
+        glColor3f( 255, 0, 0 );
+        glRasterPos2f(600, 400);
+        int len;
+        len = (int)strlen(str);
+        for (i = 0; i < len; i++) {
+            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, str[i]);
+        }
+    }
+
+    else if(ganhou)
+    {
+        tudoInvisivel();
+        char* str = "VOCE GANHOU!!!";
+        glColor3f( 255, 0, 0 );
+        glRasterPos2f(600, 400);
+        int len;
+        len = (int)strlen(str);
+        for (i = 0; i < len; i++) {
+            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, str[i]);
+        }
     }
 
 
@@ -610,16 +696,59 @@ void keyboard ( unsigned char key, int x, int y )
 // **********************************************************************
 void arrow_keys ( int a_keys, int x, int y )
 {
+    float xr, yr, rang;
 	switch ( a_keys )
 	{
 		case GLUT_KEY_UP:       // Se pressionar UP
-			glutFullScreen ( ); // Vai para Full Screen
-			break;
+			rang = -((float)jogador.ang*M_PI)/180;
+            xr = (mov * sin(rang));
+            yr = (mov * cos(rang));
+            if(jogador.x + xr > (1200 - jogador.altura*5) || (jogador.x + xr < jogador.altura*5))
+            {
+            }
+            else{
+                jogador.x += xr;
+                jogador.x_max += xr;
+                jogador.x_min += xr;
+            }
+
+            if((jogador.y + yr > (800 - jogador.altura*5)) || (jogador.y + yr < jogador.altura*5))
+            {
+            }
+            else{
+                jogador.y += yr;
+                jogador.y_max += yr;
+                jogador.y_min += yr;
+            }
+            break;
 	    case GLUT_KEY_DOWN:     // Se pressionar UP
-								// Reposiciona a janela
-            glutPositionWindow (50,50);
-			glutReshapeWindow ( 700, 500 );
-			break;
+			rang = -((float)jogador.ang*M_PI)/180;
+            xr = (mov * sin(rang));
+            yr = (mov * cos(rang));
+            if((jogador.x - xr > (1200 - jogador.altura*5)) || (jogador.x - xr < jogador.altura*5))
+            {
+            }
+            else{
+                jogador.x -= xr;
+                jogador.x_max -= xr;
+                jogador.x_min -= xr;
+            }
+
+            if((jogador.y - yr > (800-jogador.altura*5)) || (jogador.y - yr < jogador.altura*5))
+            {
+            }
+            else{
+                jogador.y -= yr;
+                jogador.y_max -= yr;
+                jogador.y_min -= yr;
+            }
+            break;
+        case GLUT_KEY_RIGHT:
+            jogador.ang-=10;
+            break;
+        case GLUT_KEY_LEFT:
+            jogador.ang+=10;
+            break;
 		default:
 			break;
 	}
@@ -717,6 +846,9 @@ void CarregaPersonagens()
 void init(void)
 {
     srand(time(NULL));
+    morreu = false;
+    ganhou = false;
+    inimigosMortos = 0;
     //int r;
 	// Define a cor do fundo da tela (AZUL)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
