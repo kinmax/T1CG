@@ -41,7 +41,7 @@ static struct timeval last_idle_time;
 
 ifstream arquivo;
 
-float mov = 5;
+float mov = 10;
 float posx = 0;
 float posy = 0;
 
@@ -74,8 +74,11 @@ typedef struct Tiro
 {
     float x;
     float y;
-    int visivel;
+    float x_min, x_max, y_min, y_max;
+    float ang;
+    bool visivel;
     Cor cor;
+    bool inimigo;
 } Tiro;
 
 Personagem inimigos[8];
@@ -164,6 +167,27 @@ void reshape( int w, int h )
 
 }
 
+void DesenhaTiroJogador(int i)
+{
+
+    if(tirosJogador[i].visivel)
+    {
+        cout << "atirou" << endl;
+        glColor3f(tirosJogador[i].cor.r, tirosJogador[i].cor.g, tirosJogador[i].cor.b);
+
+        glPushMatrix();
+        {
+            glPointSize(5);
+            glBegin(GL_POINTS);
+                glVertex2f(tirosJogador[i].x, tirosJogador[i].y);
+            glEnd();
+        }
+        glPopMatrix();
+
+    }
+
+}
+
 void DesenhaPersonagem(Personagem p)
 {
     for(int i = 0; i < p.altura; i++)
@@ -201,7 +225,6 @@ void DesenhaJogador()
 
 void DesenhaInimigo(int in)
 {
-    srand(time(NULL));
     float t;
     Ponto p0, p1, p2;
     if(inimigos[in].visivel)
@@ -230,7 +253,7 @@ void DesenhaInimigo(int in)
         inimigos[in].x = (pow((1-t), 2) * p0.x) + (2 * (1-t)*t*p1.x) + (pow(t,2)*p2.x);
         inimigos[in].y = (pow((1-t), 2) * p0.y) + (2 * (1-t)*t*p1.y) + (pow(t,2)*p2.y);
 
-        inimigos[in].t += 0.3 * dtime;
+        inimigos[in].t += 0.2 * dtime;
         glPushMatrix();
         {
             glTranslatef(inimigos[in].x,inimigos[in].y,0);
@@ -265,6 +288,7 @@ void display( void )
 	glLineWidth(3);
 	glColor3f(1,0,0);
 
+	srand(time(NULL));
 
 	DesenhaJogador();
 	DesenhaInimigo(0);
@@ -277,7 +301,7 @@ void display( void )
 	DesenhaInimigo(7);
 
 
-    glLoadIdentity();
+    //glLoadIdentity();
 
         /*glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -314,11 +338,27 @@ void keyboard ( unsigned char key, int x, int y )
 		case 27:        // Termina o programa qdo
 			exit ( 0 );   // a tecla ESC for pressionada
 			break;
+        case ' ':
+            if(contaTirosJogador < 10)
+            {
+                tirosJogador[contaTirosJogador].inimigo = false;
+                tirosJogador[contaTirosJogador].visivel = true;
+                tirosJogador[contaTirosJogador].x = jogador.x;
+                tirosJogador[contaTirosJogador].y = jogador.y_max;
+                tirosJogador[contaTirosJogador].ang = jogador.ang;
+                tirosJogador[contaTirosJogador].cor.id = 3;
+                tirosJogador[contaTirosJogador].cor.r = 0;
+                tirosJogador[contaTirosJogador].cor.g = 255;
+                tirosJogador[contaTirosJogador].cor.b = 0;
+                contaTirosJogador++;
+                DesenhaTiroJogador(contaTirosJogador);
+            }
+            break;
         case 'a':
-            jogador.ang+=5;
+            jogador.ang+=10;
             break;
         case 'd':
-            jogador.ang-=5;
+            jogador.ang-=10;
             break;
         case 'w':
             rang = -((float)jogador.ang*M_PI)/180;
@@ -469,6 +509,31 @@ void CarregaPersonagens()
             inimigos[6] = inimigos[7] = pers;
         }
     }
+}
+
+bool colisao(Personagem p, Tiro t)
+{
+
+}
+
+bool colisao(Personagem p1, Personagem p2)
+{
+    float x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max;
+    x1_min = p1.x_min;
+    x1_max = p1.x_max;
+    y1_min = p1.y_min;
+    y1_min = p1.y_max;
+
+    x2_min = p2.x_min;
+    x2_max = p2.x_max;
+    y2_min = p2.y_min;
+    y2_min = p2.y_max;
+
+    if(((x1_max > x2_min && x1_max < x2_max) || (x1_min > x2_min && x1_min < x2_max)) && ((y1_max > y2_min && y1_max < y2_max) || (y1_min > y2_min && y1_min < y2_max)))
+    {
+        return true;
+    }
+    return false;
 }
 
 bool colisao(float x1, float y1, float x2, float y2)
